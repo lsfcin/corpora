@@ -4,6 +4,29 @@ import pygetwindow as gw
 import numpy as np
 from pynput import mouse, keyboard
 import threading
+import matplotlib
+
+import cv2
+import torch
+
+from depth_anything_v2.dpt import DepthAnythingV2
+
+DEVICE = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
+
+depth_anything_configs = {
+    'vits': {'encoder': 'vits', 'features': 64, 'out_channels': [48, 96, 192, 384]},
+    'vitb': {'encoder': 'vitb', 'features': 128, 'out_channels': [96, 192, 384, 768]},
+    'vitl': {'encoder': 'vitl', 'features': 256, 'out_channels': [256, 512, 1024, 1024]},
+    'vitg': {'encoder': 'vitg', 'features': 384, 'out_channels': [1536, 1536, 1536, 1536]}
+}
+
+encoder = 'vits' # or 'vits', 'vitb', 'vitg'
+
+depth_anything = DepthAnythingV2(**depth_anything_configs[encoder])
+depth_anything.load_state_dict(torch.load(f'rsc/depth_anything_v2_{encoder}.pth', map_location='cpu'))
+depth_anything = depth_anything.to(DEVICE).eval()
+
+#raw_img = cv2.imread('your/image/path')
 
 mouse_x = 0
 mouse_y = 0
@@ -72,8 +95,17 @@ pose = mp_pose.Pose()
 cap = cv2.VideoCapture(0)
 active_window = gw.getActiveWindow()
 
+
+cmap = matplotlib.colormaps.get_cmap('Spectral_r')
+
 while cap.isOpened():
     success, image = cap.read()
+    depth = depth_anything.infer_image(image) # HxW raw depth map in numpy
+    depth = (depth - depth.min()) / (depth.max() - depth.min()) * 255.0
+    depth = depth.astype(np.uint8)
+    depth = (cmap(depth)[:, :, :3] * 255)[:, :, ::-1].astype(np.uint8)
+    
+    cv2.imshow('Depth', depth)
 
     # Get the active window
     current_window = gw.getActiveWindow()

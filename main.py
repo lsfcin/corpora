@@ -5,10 +5,9 @@ import numpy as np
 from pynput import mouse, keyboard
 import threading
 import matplotlib
-
 import cv2
 import torch
-
+from ultralytics import YOLO
 from depth_anything_v2.dpt import DepthAnythingV2
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
@@ -22,12 +21,31 @@ depth_anything_configs = {
 
 encoder = 'vits' # or 'vits', 'vitb', 'vitg'
 
+# depth
 depth_anything = DepthAnythingV2(**depth_anything_configs[encoder])
 depth_anything.load_state_dict(torch.load(f'rsc/depth_anything_v2_{encoder}.pth', map_location='cpu'))
 depth_anything = depth_anything.to(DEVICE).eval()
 
-#raw_img = cv2.imread('your/image/path')
+######################
 
+# Load the YOLOv5 model
+segmentation_yolo = YOLO(f'C:/Users/Lucas/Desktop/Workspace/Corpora/rsc/yolo11s-seg.pt')
+def draw_segmentation(image, masks, boxes, labels, scores, threshold=0.5):
+    for mask, box, label, score in zip(masks, boxes, labels, scores):
+        if score >= threshold:
+            color = (240, 240, 0)
+            mask = mask.cpu().numpy()
+            mask = (mask > 0.5).astype(np.uint8)
+            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            cv2.drawContours(image, contours, -1, color, 2)
+            x1, y1, x2, y2 = box
+            cv2.rectangle(image, (int(x1), int(y1)), (int(x2), int(y2)), color, 2)
+            cv2.putText(image, f"{label}: {score:.2f}", (int(x1), int(y1) - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
+######################
+
+#raw_img = cv2.imread('your/image/path')
 mouse_x = 0
 mouse_y = 0
 
@@ -95,17 +113,38 @@ pose = mp_pose.Pose()
 cap = cv2.VideoCapture(0)
 active_window = gw.getActiveWindow()
 
-
 cmap = matplotlib.colormaps.get_cmap('Spectral_r')
 
 while cap.isOpened():
+
     success, image = cap.read()
+    
+    ############################
+
     depth = depth_anything.infer_image(image) # HxW raw depth map in numpy
     depth = (depth - depth.min()) / (depth.max() - depth.min()) * 255.0
     depth = depth.astype(np.uint8)
     depth = (cmap(depth)[:, :, :3] * 255)[:, :, ::-1].astype(np.uint8)
     
     cv2.imshow('Depth', depth)
+
+    ############################
+
+   # Perform object segmentation
+    results = segmentation_yolo(image)
+    masks = results[0].masks.data
+    boxes = results[0].boxes.xyxy.cpu().numpy()
+    labels = [segmentation_yolo.names[int(cls)] for cls in results[0].boxes.cls]
+    scores = results[0].boxes.conf.cpu().numpy()
+
+    # Draw the segmentation results on the frame
+    draw_segmentation(image, masks, boxes, labels, scores)
+
+    # Display the resulting frame
+    #cv2.imshow('Object Segmentation', image)
+    
+    
+    ############################
 
     # Get the active window
     current_window = gw.getActiveWindow()

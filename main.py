@@ -2,46 +2,38 @@ import src.hpe as hpe
 import src.depth as depth
 import src.segment as segment
 import src.input as input
+import src.window as window
 
 import cv2
-import pygetwindow as gw
 
 pose = hpe.PoseEstimator()
 depth = depth.DepthEstimator()
 segment = segment.Segmenter()
 input = input.Input()
-
-input.start()
+window = window.Window()
 
 # Set up video capture from webcam
 cap = cv2.VideoCapture(0)
-active_window = gw.getActiveWindow()
 
 while cap.isOpened():
 
     success, frame = cap.read()
+    if not success:
+        print("Ignoring empty camera frame.")
+        continue
+
     image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     depth_map = frame.copy()
 
     pose.process(image_rgb)
     depth.process(frame)
-    #segment.process(frame)
+    segment.process(frame)
+    window.process()
     
-    pose.draw(frame)
-    depth.draw(depth_map)
-    #segment.draw(frame)  
-
-    # Get the active window
-    current_window = gw.getActiveWindow()
-
-    # Print the title of the active window
-    if active_window.title != current_window.title:
-        active_window = current_window
-        print(f"Current focused window name: {active_window.title}")
-    
-    if not success:
-        print("Ignoring empty camera frame.")
-        continue
+    pose.show(frame)
+    depth.show(depth_map)
+    segment.show(frame)
+    window.show()
 
     # Display the resulting image
     cv2.imshow('Depth', depth_map)

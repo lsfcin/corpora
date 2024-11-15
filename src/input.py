@@ -7,7 +7,6 @@ class Input:
         self.mouse_x = 0
         self.mouse_y = 0
 
-    def start(self):
         # Start mouse listener in a separate thread
         self.mouse_listener = mouse.Listener(
             #on_move=self.on_move, # on_move event is deactivated

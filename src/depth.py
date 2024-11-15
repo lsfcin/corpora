@@ -32,7 +32,7 @@ class DepthEstimator:
         return self.depth_map
     
     # Draw the depth map on the image
-    def draw(self, output_image):        
+    def show(self, output_image):        
         normalized_depth_map = (self.depth_map - self.depth_map.min()) / (self.depth_map.max() - self.depth_map.min()) * 255.0
         normalized_depth_map = normalized_depth_map.astype(np.uint8)
         normalized_depth_map = (self.cmap(normalized_depth_map)[:, :, :3] * 255)[:, :, ::-1].astype(np.uint8)

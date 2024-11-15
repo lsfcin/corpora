@@ -5,8 +5,13 @@ from ultralytics import YOLO
 class Segmenter:
     def __init__(self):
         self.segmenter = YOLO(f'C:/Users/Lucas/Desktop/Workspace/Corpora/rsc/yolo11s-seg.pt')
+        self.results = None
+        self.masks = None
+        self.boxes = None
+        self.labels = None
+        self.scores = None
     
-    def draw(self, image, threshold=0.5):
+    def show(self, image, threshold=0.5):
         for mask, box, label, score in zip(self.masks, self.boxes, self.labels, self.scores):
             if score >= threshold:
                 color = (240, 240, 0)

@@ -9,7 +9,6 @@ import src.pose6dof as pose6dof
 # Create pose class
 class PoseEstimator:
     def __init__(self):
-
         # Initialize MediaPipe Face Mesh modules
         self.mp_body_pose = mp.solutions.pose
         self.mp_face_mesh = mp.solutions.face_mesh
@@ -42,7 +41,7 @@ class PoseEstimator:
     def get(self):
         return self.body_results, self.face_results
 
-    def draw(self, image):
+    def show(self, image):
         # Draw the face mesh on the image
         if self.face_results.multi_face_landmarks:        
             for face_landmarks in self.face_results.multi_face_landmarks:

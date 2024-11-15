@@ -9,45 +9,45 @@ class Input:
 
     def start(self):
         # Start mouse listener in a separate thread
-        mouse_listener = mouse.Listener(
-            on_move=self.on_move,
+        self.mouse_listener = mouse.Listener(
+            #on_move=self.on_move, # on_move event is deactivated
             on_click=self.on_click,
             on_scroll=self.on_scroll)
-        mouse_thread = threading.Thread(target=mouse_listener.start)
-        mouse_thread.daemon = True
-        mouse_thread.start()
+        self.mouse_thread = threading.Thread(target=self.mouse_listener.start)
+        self.mouse_thread.daemon = True
+        self.mouse_thread.start()
 
         # Start keyboard listener in a separate thread
-        keyboard_listener = keyboard.Listener(
+        self.keyboard_listener = keyboard.Listener(
             on_press=self.on_press,
             on_release=self.on_release)
-        keyboard_thread = threading.Thread(target=keyboard_listener.start)
-        keyboard_thread.daemon = True
-        keyboard_thread.start()
+        self.keyboard_thread = threading.Thread(target=self.keyboard_listener.start)
+        self.keyboard_thread.daemon = True
+        self.keyboard_thread.start()
 
     # Define callback functions for mouse events
-    def on_move(x, y):
-        mouse_x = x
-        mouse_y = y
-        #print(f"Mouse moved to ({x}, {y})")
+    def on_move(self, x, y):
+        self.mouse_x = x
+        self.mouse_y = y
+        print(f"Mouse moved to ({x}, {y})")
 
-    def on_click(x, y, button, pressed):
+    def on_click(self, x, y, button, pressed):
         if pressed:
             print(f"Mouse clicked at ({x}, {y}) with {button}")
         else:
             print(f"Mouse released at ({x}, {y}) with {button}")
 
-    def on_scroll(x, y, dx, dy):
+    def on_scroll(self, x, y, dx, dy):
         print(f"Mouse scrolled at ({x}, {y}) with delta ({dx}, {dy})")
 
     # Define callback functions for keyboard events
-    def on_press(key):
+    def on_press(self, key):
         try:
             print(f"Key pressed: {key.char}")
         except AttributeError:
             print(f"Special key pressed: {key}")
 
-    def on_release(key):
+    def on_release(self, key):
         print(f"Key released: {key}")
         if key == keyboard.Key.esc:
             # Stop listener

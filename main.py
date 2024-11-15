@@ -25,11 +25,11 @@ while cap.isOpened():
 
     pose.process(image_rgb)
     depth.process(frame)
-    segment.process(frame)
+    #segment.process(frame)
     
     pose.draw(frame)
     depth.draw(depth_map)
-    segment.draw(frame)  
+    #segment.draw(frame)  
 
     # Get the active window
     current_window = gw.getActiveWindow()

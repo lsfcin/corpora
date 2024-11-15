@@ -1,4 +1,5 @@
 import src.hpe as hpe
+import src.depth as depth
 
 import cv2
 import mediapipe as mp
@@ -13,23 +14,8 @@ from depth_anything_v2.dpt import DepthAnythingV2
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
 
-pose = hpe.Pose()
-
-depth_anything_configs = {
-    'vits': {'encoder': 'vits', 'features': 64, 'out_channels': [48, 96, 192, 384]},
-    'vitb': {'encoder': 'vitb', 'features': 128, 'out_channels': [96, 192, 384, 768]},
-    'vitl': {'encoder': 'vitl', 'features': 256, 'out_channels': [256, 512, 1024, 1024]},
-    'vitg': {'encoder': 'vitg', 'features': 384, 'out_channels': [1536, 1536, 1536, 1536]}
-}
-
-encoder = 'vits' # or 'vits', 'vitb', 'vitg'
-
-# depth
-depth_anything = DepthAnythingV2(**depth_anything_configs[encoder])
-depth_anything.load_state_dict(torch.load(f'rsc/depth_anything_v2_{encoder}.pth', map_location='cpu'))
-depth_anything = depth_anything.to(DEVICE).eval()
-
-######################
+pose = hpe.PoseEstimator()
+depth = depth.DepthEstimator()
 
 # Load the YOLOv5 model
 segmentation_yolo = YOLO(f'C:/Users/Lucas/Desktop/Workspace/Corpora/rsc/yolo11s-seg.pt')
@@ -101,22 +87,15 @@ keyboard_thread.start()
 cap = cv2.VideoCapture(0)
 active_window = gw.getActiveWindow()
 
-cmap = matplotlib.colormaps.get_cmap('Spectral_r')
+# cmap = matplotlib.colormaps.get_cmap('Spectral_r')
 
 while cap.isOpened():
 
     success, image = cap.read()
     
-    ############################
-
-    depth = depth_anything.infer_image(image) # HxW raw depth map in numpy
-    depth = (depth - depth.min()) / (depth.max() - depth.min()) * 255.0
-    depth = depth.astype(np.uint8)
-    depth = (cmap(depth)[:, :, :3] * 255)[:, :, ::-1].astype(np.uint8)
-    
-    cv2.imshow('Depth', depth)
-
-    ############################
+    depth.process(image)
+    depth_map = depth.draw(image)
+    cv2.imshow('Depth', depth_map)
 
    # Perform object segmentation
     results = segmentation_yolo(image)

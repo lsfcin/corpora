@@ -5,7 +5,7 @@ import numpy as np
 import mediapipe as mp
 
 # Create pose class
-class Pose:
+class PoseEstimator:
     def __init__(self):
         # Initialize MediaPipe Face Mesh modules
         self.mp_body_pose = mp.solutions.pose

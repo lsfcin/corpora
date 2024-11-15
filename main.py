@@ -1,5 +1,6 @@
 import src.hpe as hpe
 import src.depth as depth
+import src.segment as segment
 
 import cv2
 import mediapipe as mp
@@ -12,29 +13,10 @@ import torch
 from ultralytics import YOLO
 from depth_anything_v2.dpt import DepthAnythingV2
 
-DEVICE = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
-
 pose = hpe.PoseEstimator()
 depth = depth.DepthEstimator()
+segment = segment.Segmenter()
 
-# Load the YOLOv5 model
-segmentation_yolo = YOLO(f'C:/Users/Lucas/Desktop/Workspace/Corpora/rsc/yolo11s-seg.pt')
-def draw_segmentation(image, masks, boxes, labels, scores, threshold=0.5):
-    for mask, box, label, score in zip(masks, boxes, labels, scores):
-        if score >= threshold:
-            color = (240, 240, 0)
-            mask = mask.cpu().numpy()
-            mask = (mask > 0.5).astype(np.uint8)
-            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            cv2.drawContours(image, contours, -1, color, 2)
-            x1, y1, x2, y2 = box
-            cv2.rectangle(image, (int(x1), int(y1)), (int(x2), int(y2)), color, 2)
-            cv2.putText(image, f"{label}: {score:.2f}", (int(x1), int(y1) - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-
-######################
-
-#raw_img = cv2.imread('your/image/path')
 mouse_x = 0
 mouse_y = 0
 
@@ -87,28 +69,20 @@ keyboard_thread.start()
 cap = cv2.VideoCapture(0)
 active_window = gw.getActiveWindow()
 
-# cmap = matplotlib.colormaps.get_cmap('Spectral_r')
-
 while cap.isOpened():
 
     success, frame = cap.read()
-    
+    image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     depth_map = frame.copy()
+
+    pose.process(image_rgb)
     depth.process(frame)
-    depth.draw(depth_map)
-    cv2.imshow('Depth', depth_map, False)
-
-   # Perform object segmentation
-    results = segmentation_yolo(frame)
-    masks = results[0].masks.data
-    boxes = results[0].boxes.xyxy.cpu().numpy()
-    labels = [segmentation_yolo.names[int(cls)] for cls in results[0].boxes.cls]
-    scores = results[0].boxes.conf.cpu().numpy()
-
-    # Draw the segmentation results on the frame
-    draw_segmentation(frame, masks, boxes, labels, scores)  
+    segment.process(frame)
     
-    ############################
+    pose.draw(frame)
+    depth.draw(depth_map)
+    segment.draw(frame)  
+    
 
     # Get the active window
     current_window = gw.getActiveWindow()
@@ -123,13 +97,8 @@ while cap.isOpened():
         print("Ignoring empty camera frame.")
         continue
 
-    # Convert the image to RGB
-    image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-    pose.process(image_rgb)
-    pose.draw(frame)
-
     # Display the resulting image
+    cv2.imshow('Depth', depth_map)
     cv2.imshow('Face Mesh', frame)
 
     # Break the loop if 'q' is pressed

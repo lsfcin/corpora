@@ -31,16 +31,9 @@ class DepthEstimator:
     def get(self):
         return self.depth_map
     
-    def draw(self, image):
-        # Draw the depth map on the image
-        #result = cv2.resize(self.depth_map, (image.shape[1], image.shape[0]))
-        
-        result = (self.depth_map - self.depth_map.min()) / (self.depth_map.max() - self.depth_map.min()) * 255.0
-        result = result.astype(np.uint8)
-        result = (self.cmap(result)[:, :, :3] * 255)[:, :, ::-1].astype(np.uint8)
-        
-        # self.depth_map = (self.depth_map - self.depth_map.min()) / (self.depth_map.max() - self.depth_map.min())
-        # self.depth_map = (self.cmap(self.depth_map) * 255).astype(np.uint8)
-        # self.depth_map = cv2.cvtColor(self.depth_map, cv2.COLOR_RGBA2RGB)
-        # image = cv2.addWeighted(image, 0.7, self.depth_map, 0.3, 0)
-        return result
+    # Draw the depth map on the image
+    def draw(self, output_image):        
+        normalized_depth_map = (self.depth_map - self.depth_map.min()) / (self.depth_map.max() - self.depth_map.min()) * 255.0
+        normalized_depth_map = normalized_depth_map.astype(np.uint8)
+        normalized_depth_map = (self.cmap(normalized_depth_map)[:, :, :3] * 255)[:, :, ::-1].astype(np.uint8)
+        output_image.data = normalized_depth_map.data

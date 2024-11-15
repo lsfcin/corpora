@@ -91,21 +91,22 @@ active_window = gw.getActiveWindow()
 
 while cap.isOpened():
 
-    success, image = cap.read()
+    success, frame = cap.read()
     
-    depth.process(image)
-    depth_map = depth.draw(image)
-    cv2.imshow('Depth', depth_map)
+    depth_map = frame.copy()
+    depth.process(frame)
+    depth.draw(depth_map)
+    cv2.imshow('Depth', depth_map, False)
 
    # Perform object segmentation
-    results = segmentation_yolo(image)
+    results = segmentation_yolo(frame)
     masks = results[0].masks.data
     boxes = results[0].boxes.xyxy.cpu().numpy()
     labels = [segmentation_yolo.names[int(cls)] for cls in results[0].boxes.cls]
     scores = results[0].boxes.conf.cpu().numpy()
 
     # Draw the segmentation results on the frame
-    draw_segmentation(image, masks, boxes, labels, scores)  
+    draw_segmentation(frame, masks, boxes, labels, scores)  
     
     ############################
 
@@ -123,13 +124,13 @@ while cap.isOpened():
         continue
 
     # Convert the image to RGB
-    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     pose.process(image_rgb)
-    pose.draw(image)
+    pose.draw(frame)
 
     # Display the resulting image
-    cv2.imshow('Face Mesh', image)
+    cv2.imshow('Face Mesh', frame)
 
     # Break the loop if 'q' is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):

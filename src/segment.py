@@ -4,7 +4,7 @@ from ultralytics import YOLO
 
 class Segmenter:
     def __init__(self):
-        self.segmenter = YOLO(f'C:/Users/Lucas/Desktop/Workspace/Corpora/rsc/yolo11s-seg.pt')
+        self.segmenter = YOLO(f'rsc/yolo11s-seg.pt')
         self.results = None
         self.masks = None
         self.boxes = None
@@ -14,7 +14,7 @@ class Segmenter:
     def show(self, image, threshold=0.5):
         for mask, box, label, score in zip(self.masks, self.boxes, self.labels, self.scores):
             if score >= threshold:
-                color = (240, 240, 0)
+                color = (240, 0, 220)
                 mask = mask.cpu().numpy()
                 mask = (mask > 0.5).astype(np.uint8)
                 contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -25,7 +25,7 @@ class Segmenter:
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
     def process(self, image):
-        self.results = self.segmenter(image)
+        self.results = self.segmenter.predict(image)
         self.masks = self.results[0].masks.data
         self.boxes = self.results[0].boxes.xyxy.cpu().numpy()
         self.labels = [self.segmenter.names[int(cls)] for cls in self.results[0].boxes.cls]

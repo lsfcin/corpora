@@ -1,6 +1,6 @@
-gradio_imageslider
-gradio==4.29.0
-matplotlib
-opencv-python
-torch
-torchvision
+pip install opencv-python
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+pip install mediapipe
+pip install ultralytics
+pip install pynput
+pip install PyGetWindow

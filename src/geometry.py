@@ -1,0 +1,105 @@
+import cv2
+import numpy as np
+
+class Geometry:
+    def __init__(self):
+        self.boxes_3d = []
+        pass
+
+    # receive a depth map and a segmentation mask and 
+    # return the 3D boundung boxes and orientations of the objects
+    def process(self, depth_map, contours, labels):
+        # List to store the 3D bounding boxes and orientations
+
+        self.boxes_3d.clear()
+
+        for contour, label in zip(contours, labels):
+
+            # Find the maximum and the average depth values of the object in the current contour
+            
+            # Create a mask for the current contour
+            contour_mask = np.zeros_like(depth_map, dtype=np.uint8)
+            cv2.drawContours(contour_mask, [contour], -1, 255, thickness=cv2.FILLED)
+
+            # Extract the depth values within the contour
+            depth_values = depth_map[contour_mask == 255]
+
+            # Calculate the minimum, maximum, and average depth values
+            max_depth = np.max(depth_values)
+            avg_depth = np.mean(depth_values)
+
+            print(f"{label} -> max depth: {max_depth}, avg depth: {avg_depth}")
+
+
+            # Calculate the 2D bounding box
+            x, y, w, h = cv2.boundingRect(contour)
+
+            # Extract the depth values for the bounding box corners
+            depth_front = max_depth  # Top-left corner
+            depth_back = avg_depth - (max_depth - avg_depth)  # Top-right corner
+
+            # Estimate the 3D coordinates of the bounding box corners
+            top_left_front = np.array([x, y, depth_front])
+            bottom_right_back = np.array([x + w, y + h, depth_back])
+
+            # Calculate the center of the bounding box
+            center_3d = (top_left_front + bottom_right_back) / 2
+
+            # # Calculate the orientation of the object (simplified example)
+            # orientation = np.arctan2(tr_3d[1] - tl_3d[1], tr_3d[0] - tl_3d[0])
+
+            # Store the 3D bounding box and orientation
+            self.boxes_3d.append({
+                'bounding_box': [top_left_front, bottom_right_back],
+                'center': center_3d,
+                'label': label
+            })
+
+    def create_box(self, box):
+        top_left_front = box['bounding_box'][0]
+        bottom_right_back = box['bounding_box'][1]
+
+        # Create 8 points of the bounding box
+        points = [
+            top_left_front,
+            [bottom_right_back[0], top_left_front[1], top_left_front[2]],
+            [top_left_front[0], bottom_right_back[1], top_left_front[2]],
+            [top_left_front[0], top_left_front[1], bottom_right_back[2]],
+            [bottom_right_back[0], bottom_right_back[1], top_left_front[2]],
+            [bottom_right_back[0], top_left_front[1], bottom_right_back[2]],
+            [top_left_front[0], bottom_right_back[1], bottom_right_back[2]],
+            bottom_right_back
+        ]
+
+        # Create lines connecting the points
+        lines = [
+            [0, 1], [0, 2], [0, 3],
+            [1, 4], [1, 5],
+            [2, 4], [2, 6],
+            [3, 5], [3, 6],
+            [4, 7],
+            [5, 7],
+            [6, 7]
+        ]
+
+        # Create an Open3D LineSet object
+        line_set = o3d.geometry.LineSet()
+        line_set.points = o3d.utility.Vector3dVector(points)
+        line_set.lines = o3d.utility.Vector2iVector(lines)
+        line_set.colors = o3d.utility.Vector3dVector([[0, 1, 0] for _ in range(len(lines))])  # Green color
+
+        return line_set
+
+    def show(self):
+        # Create an Open3D visualization window
+        vis = o3d.visualization.Visualizer()
+        vis.create_window()
+
+        # Add the 3D bounding boxes to the visualization
+        for box in self.boxes_3d:
+            line_set = self.create_box(box)
+            vis.add_geometry(line_set)
+
+        # Run the visualization
+        vis.run()
+        vis.destroy_window()

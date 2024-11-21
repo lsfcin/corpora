@@ -3,6 +3,8 @@ import src.depth as depth
 import src.segment as segment
 import src.input as input
 import src.window as window
+import src.geometry as geometry
+import src.visualizer3d as visualizer3d
 
 import cv2
 
@@ -11,6 +13,7 @@ depth = depth.DepthEstimator()
 segment = segment.Segmenter()
 input = input.Input()
 window = window.Window()
+geometry = geometry.Geometry()
 
 # Set up video capture from webcam
 cap = cv2.VideoCapture(0)
@@ -38,6 +41,12 @@ while cap.isOpened():
     # Display the resulting image
     cv2.imshow('Depth', depth_map)
     cv2.imshow('Face Mesh', frame)
+
+    # depth_map = depth.get()
+    # masks,boxes,labels,scores,contours = segment.get()
+
+    # geometry.process(depth_map, contours, labels)
+    # geometry.show()
 
     # Break the loop if 'q' is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):

@@ -30,7 +30,6 @@ class Geometry:
 
             print(f"{label} -> max depth: {max_depth}, avg depth: {avg_depth}")
 
-
             # Calculate the 2D bounding box
             x, y, w, h = cv2.boundingRect(contour)
 

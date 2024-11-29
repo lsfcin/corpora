@@ -4,7 +4,7 @@ import src.segment as segment
 import src.input as input
 import src.window as window
 import src.geometry as geometry
-import src.visualizer3d as visualizer3d
+#import src.visualizer3d as visualizer3d
 
 import cv2
 
@@ -13,7 +13,7 @@ depth = depth.DepthEstimator()
 segment = segment.Segmenter()
 input = input.Input()
 window = window.Window()
-geometry = geometry.Geometry()
+# geometry = geometry.Geometry()
 
 # Set up video capture from webcam
 cap = cv2.VideoCapture(0)
@@ -37,6 +37,7 @@ while cap.isOpened():
     depth.show(depth_map)
     segment.show(frame)
     window.show()
+    #visualizer3d.show()
 
     # Display the resulting image
     cv2.imshow('Depth', depth_map)

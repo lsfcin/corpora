@@ -9,6 +9,7 @@ import src.pose6dof as pose6dof
 # Create pose class
 class PoseEstimator:
     def __init__(self):
+                
         # Initialize MediaPipe Face Mesh modules
         self.mp_body_pose = mp.solutions.pose
         self.mp_face_mesh = mp.solutions.face_mesh

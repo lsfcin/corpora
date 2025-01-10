@@ -81,24 +81,48 @@ class Geometry:
             [6, 7]
         ]
 
-        # Create an Open3D LineSet object
-        line_set = o3d.geometry.LineSet()
-        line_set.points = o3d.utility.Vector3dVector(points)
-        line_set.lines = o3d.utility.Vector2iVector(lines)
-        line_set.colors = o3d.utility.Vector3dVector([[0, 1, 0] for _ in range(len(lines))])  # Green color
+        # # Create an Open3D LineSet object
+        # line_set = o3d.geometry.LineSet()
+        # line_set.points = o3d.utility.Vector3dVector(points)
+        # line_set.lines = o3d.utility.Vector2iVector(lines)
+        # line_set.colors = o3d.utility.Vector3dVector([[0, 1, 0] for _ in range(len(lines))])  # Green color
 
-        return line_set
+        # return line_set
+
+    def project_point(self, point, camera_matrix, rotation_vector, translation_vector):
+        # Project the 3D point to the 2D image plane
+        point = point.reshape(1, 3)
+        image_points, _ = cv2.projectPoints(point, rotation_vector, translation_vector, camera_matrix, None)
+        return image_points[0][0]
 
     def show(self):
-        # Create an Open3D visualization window
-        vis = o3d.visualization.Visualizer()
-        vis.create_window()
 
-        # Add the 3D bounding boxes to the visualization
+        # Create an opencv window
+        cv2.namedWindow('Geometry', cv2.WINDOW_NORMAL)
+
+        # Create a blank image
+        image = np.zeros((720, 1280, 3), dtype=np.uint8)
+
+        # Draw the 3D bounding boxes
+        self.draw_3D_bounding_boxes(image)
+
+        # Rotate the camera using mouse coordinates if the left mouse button is pressed
+
+
+        # Display the image
+        cv2.imshow('Geometry', image)
+
+    def draw_3D_bounding_boxes(self, image):
         for box in self.boxes_3d:
-            line_set = self.create_box(box)
-            vis.add_geometry(line_set)
+            # Create the 3D bounding box
+            cube = self.create_box(box)
 
-        # Run the visualization
-        vis.run()
-        vis.destroy_window()
+            # Project the 3D bounding box to the 2D image plane
+            projected_points = []
+            for point in cube.points:
+                projected_point = self.project_point(point, self.camera_matrix, self.rotation_vector, self.translation_vector)
+                projected_points.append(projected_point)
+
+            # Draw the 3D bounding box
+            for edge in cube.edges:
+                cv2.line(image, projected_points[edge[0]], projected_points[edge[1]], (0, 255, 0), 2)

@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import mediapipe as mp
 
-import src.pose6dof as pose6dof
+import src.transform as transform
 
 # Create pose class
 class PoseEstimator:
@@ -26,8 +26,8 @@ class PoseEstimator:
             min_tracking_confidence=0.5)
         
         # Set up the gaze and head module
-        self.gaze = pose6dof.Pose6DOF(np.array([0, 0, 0]), np.array([0, 0, 0]))
-        self.head = pose6dof.Pose6DOF(np.array([0, 0, 0]), np.array([0, 0, 0]))
+        self.gaze = transform.Pose6DOF(np.array([0, 0, 0]), np.array([0, 0, 0]))
+        self.head = transform.Pose6DOF(np.array([0, 0, 0]), np.array([0, 0, 0]))
 
     def process(self, image_rgb, print_elapsed_time=False):
         # Process the image and find body landmarks

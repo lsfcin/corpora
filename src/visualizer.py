@@ -100,7 +100,8 @@ while True:
     i += 1
     if i % 100 == 0:
         multiplier *= -1
-    mesh.translate([0.001 * multiplier, 0, 0])
+    #mesh.translate([0.001 * multiplier, 0, 0])
+    mesh.scale(0.999, center=mesh.get_center())
     # Move cube slightly to show that the rendering is real-time
     vis.update_geometry(mesh)
     vis.poll_events()

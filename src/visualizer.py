@@ -83,29 +83,43 @@
 
 #########################
 
-import open3d as o3d
+# import open3d as o3d
 
-vis = o3d.visualization.Visualizer()
-vis.create_window("test", width=800, height=600)
+# vis = o3d.visualization.Visualizer()
+# vis.create_window("test", width=800, height=600)
 
-mesh = o3d.geometry.TriangleMesh.create_box()
-mesh.compute_vertex_normals()
+# #mesh = o3d.geometry.TriangleMesh.create_box()
+# mesh = o3d.geometry.TriangleMesh.create_sphere(0.8)
 
-vis.add_geometry(mesh)
+# mesh.paint_uniform_color([1, 0.7, 0])
+# mesh.compute_vertex_normals()
+
+# vis.add_geometry(mesh)
+
+############################
+
+# Render colored wireframe of a cube
+# Render multiple cubes
+# Setup cube position, orientation and scale once
+# Setup cube position, orientation and scale in realtime
+# Grab a point cloud from the depth map
+# Colorize the point cloud using the image
+# Render a point cloud
+# Create a hashmap to store bounding boxes
 
 # Rendering loop
-i = 0
-multiplier = 1
-while True:
-    i += 1
-    if i % 100 == 0:
-        multiplier *= -1
-    #mesh.translate([0.001 * multiplier, 0, 0])
-    mesh.scale(0.999, center=mesh.get_center())
-    # Move cube slightly to show that the rendering is real-time
-    vis.update_geometry(mesh)
-    vis.poll_events()
-    vis.update_renderer()
+# i = 0
+# multiplier = 1
+# while True:
+#     i += 1
+#     if i % 100 == 0:
+#         multiplier *= -1
+#     #mesh.translate([0.001 * multiplier, 0, 0])
+#     mesh.scale(0.999, center=mesh.get_center())
+#     # Move cube slightly to show that the rendering is real-time
+#     vis.update_geometry(mesh)
+#     vis.poll_events()
+#     vis.update_renderer()
 
 
 #########################
@@ -266,6 +280,78 @@ while True:
 
 
 
+import numpy as np
+import open3d as o3d
 
 
+def box_center_to_corner(box):
+    # To return
+    corner_boxes = np.zeros((8, 3))
 
+    translation = box[0:3]
+    h, w, l = box[3], box[4], box[5]
+    rotation = box[6]
+
+    # Create a bounding box outline
+    bounding_box = np.array([
+        [-l/2, -l/2, l/2, l/2, -l/2, -l/2, l/2, l/2],
+        [w/2, -w/2, -w/2, w/2, w/2, -w/2, -w/2, w/2],
+        [-h/2, -h/2, -h/2, -h/2, h/2, h/2, h/2, h/2]])
+
+    # Standard 3x3 rotation matrix around the Z axis
+    rotation_matrix = np.array([
+        [np.cos(rotation), -np.sin(rotation), 0.0],
+        [np.sin(rotation), np.cos(rotation), 0.0],
+        [0.0, 0.0, 1.0]])
+
+    # Repeat the [x, y, z] eight times
+    eight_points = np.tile(translation, (8, 1))
+
+    # Translate the rotated bounding box by the
+    # original center position to obtain the final box
+    corner_box = np.dot(
+        rotation_matrix, bounding_box) + eight_points.transpose()
+
+    return corner_box.transpose()
+
+x = 0
+y = 0
+z = 0
+h = 1
+w = 1
+l = 1
+r = 0
+corner_box = box_center_to_corner([x,y,z,h,w,l,r])
+
+# Our lines span from points 0 to 1, 1 to 2, 2 to 3, etc...
+lines = [[0, 1], [1, 2], [2, 3], [0, 3],
+         [4, 5], [5, 6], [6, 7], [4, 7],
+         [0, 4], [1, 5], [2, 6], [3, 7]]
+
+# Use the same color for all lines
+colors = [[1, 0, 0] for _ in range(len(lines))]
+
+line_set = o3d.geometry.LineSet()
+line_set.points = o3d.utility.Vector3dVector(corner_box)
+line_set.lines = o3d.utility.Vector2iVector(lines)
+line_set.colors = o3d.utility.Vector3dVector(colors)
+
+# Create a visualization object and window
+vis = o3d.visualization.Visualizer()
+vis.create_window()
+
+# Display the bounding boxes:
+vis.add_geometry(line_set)
+
+i = 0
+multiplier = 1
+while True:
+    i += 1
+    if i % 100 == 0:
+        multiplier *= -1
+    #mesh.translate([0.001 * multiplier, 0, 0])
+    #mesh.scale(0.999, center=mesh.get_center())
+    # Move cube slightly to show that the rendering is real-time
+    vis.update_geometry(line_set)
+    vis.poll_events()
+    vis.update_renderer()

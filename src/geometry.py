@@ -1,17 +1,80 @@
 import cv2
 import numpy as np
+import hashlib
+
+# Define a list of 16 different colors
+colors_set = [
+    [255, 0, 0], 
+    [0, 255, 0], 
+    [0, 0, 255],
+    [255, 255, 0], 
+    [0, 255, 255], 
+    [255, 0, 255],
+    [128, 0, 0], 
+    [0, 128, 0], 
+    [0, 0, 128],
+    [128, 128, 0], 
+    [0, 128, 128], 
+    [128, 0, 128],
+    [64, 0, 0], 
+    [0, 64, 0], 
+    [0, 0, 64],
+    [64, 64, 0]
+]
 
 class Geometry:
     def __init__(self):
-        self.boxes_3d = []
+        self.boxes = []
         pass
+
+    def create_box(self, corners, color):
+        top_left_front = corners['bounding_box'][0]
+        bottom_right_back = corners['bounding_box'][1]
+
+        # Create 8 points of the bounding box
+        points = [
+            top_left_front,
+            [bottom_right_back[0], top_left_front[1], top_left_front[2]],
+            [top_left_front[0], bottom_right_back[1], top_left_front[2]],
+            [top_left_front[0], top_left_front[1], bottom_right_back[2]],
+            [bottom_right_back[0], bottom_right_back[1], top_left_front[2]],
+            [bottom_right_back[0], top_left_front[1], bottom_right_back[2]],
+            [top_left_front[0], bottom_right_back[1], bottom_right_back[2]],
+            bottom_right_back
+        ]
+
+        # Create lines connecting the points
+        lines = [
+            [0, 1], 
+            [0, 2], 
+            [0, 3],
+            [1, 4], 
+            [1, 5],
+            [2, 4], 
+            [2, 6],
+            [3, 5], 
+            [3, 6],
+            [4, 7],
+            [5, 7],
+            [6, 7]
+        ]
+
+        colors = [color for _ in range(len(lines))]
+
+        return [points, lines, colors]
+    
+    def get_color(self, label):
+        hash_object = hashlib.sha256(label.encode())
+        color_id = int(hash_object.hexdigest(), 16) % 16
+        color = colors_set[color_id]
+        return color
 
     # receive a depth map and a segmentation mask and 
     # return the 3D boundung boxes and orientations of the objects
     def process(self, depth_map, contours, labels):
         # List to store the 3D bounding boxes and orientations
 
-        self.boxes_3d.clear()
+        self.boxes.clear()
 
         for contour, label in zip(contours, labels):
 
@@ -42,52 +105,20 @@ class Geometry:
             bottom_right_back = np.array([x + w, y + h, depth_back])
 
             # Calculate the center of the bounding box
-            center_3d = (top_left_front + bottom_right_back) / 2
+            center = (top_left_front + bottom_right_back) / 2
 
             # # Calculate the orientation of the object (simplified example)
             # orientation = np.arctan2(tr_3d[1] - tl_3d[1], tr_3d[0] - tl_3d[0])
 
             # Store the 3D bounding box and orientation
-            self.boxes_3d.append({
-                'bounding_box': [top_left_front, bottom_right_back],
-                'center': center_3d,
+            corners = [top_left_front, bottom_right_back]
+            color = self.get_color(label)
+            box = self.create_box(corners, color)
+            self.boxes.append({
+                'bounding_box': box,
+                'center': center,
                 'label': label
             })
-
-    def create_box(self, box):
-        top_left_front = box['bounding_box'][0]
-        bottom_right_back = box['bounding_box'][1]
-
-        # Create 8 points of the bounding box
-        points = [
-            top_left_front,
-            [bottom_right_back[0], top_left_front[1], top_left_front[2]],
-            [top_left_front[0], bottom_right_back[1], top_left_front[2]],
-            [top_left_front[0], top_left_front[1], bottom_right_back[2]],
-            [bottom_right_back[0], bottom_right_back[1], top_left_front[2]],
-            [bottom_right_back[0], top_left_front[1], bottom_right_back[2]],
-            [top_left_front[0], bottom_right_back[1], bottom_right_back[2]],
-            bottom_right_back
-        ]
-
-        # Create lines connecting the points
-        lines = [
-            [0, 1], [0, 2], [0, 3],
-            [1, 4], [1, 5],
-            [2, 4], [2, 6],
-            [3, 5], [3, 6],
-            [4, 7],
-            [5, 7],
-            [6, 7]
-        ]
-
-        # # Create an Open3D LineSet object
-        # line_set = o3d.geometry.LineSet()
-        # line_set.points = o3d.utility.Vector3dVector(points)
-        # line_set.lines = o3d.utility.Vector2iVector(lines)
-        # line_set.colors = o3d.utility.Vector3dVector([[0, 1, 0] for _ in range(len(lines))])  # Green color
-
-        # return line_set
 
     def project_point(self, point, camera_matrix, rotation_vector, translation_vector):
         # Project the 3D point to the 2D image plane
@@ -95,34 +126,37 @@ class Geometry:
         image_points, _ = cv2.projectPoints(point, rotation_vector, translation_vector, camera_matrix, None)
         return image_points[0][0]
 
-    def show(self):
+    # def show(self):
 
-        # Create an opencv window
-        cv2.namedWindow('Geometry', cv2.WINDOW_NORMAL)
+    #     # Create an opencv window
+    #     cv2.namedWindow('Geometry', cv2.WINDOW_NORMAL)
 
-        # Create a blank image
-        image = np.zeros((720, 1280, 3), dtype=np.uint8)
+    #     # Create a blank image
+    #     image = np.zeros((720, 1280, 3), dtype=np.uint8)
 
-        # Draw the 3D bounding boxes
-        self.draw_3D_bounding_boxes(image)
+    #     # Draw the 3D bounding boxes
+    #     self.draw_3D_bounding_boxes(image)
 
-        # Rotate the camera using mouse coordinates if the left mouse button is pressed
+    #     # Display the image
+    #     cv2.imshow('Geometry', image)
 
+    # def draw_3D_bounding_boxes(self, image):
+    #     for box in self.boxes_3d:
+    #         # Create the 3D bounding box
+    #         cube = self.create_box(box)
 
-        # Display the image
-        cv2.imshow('Geometry', image)
+    #         # Project the 3D bounding box to the 2D image plane
+    #         projected_points = []
+    #         for point in cube.points:
+    #             projected_point = self.project_point(point, self.camera_matrix, self.rotation_vector, self.translation_vector)
+    #             projected_points.append(projected_point)
 
-    def draw_3D_bounding_boxes(self, image):
-        for box in self.boxes_3d:
-            # Create the 3D bounding box
-            cube = self.create_box(box)
+    #         # Draw the 3D bounding box
+    #         for edge in cube.edges:
+    #             cv2.line(image, projected_points[edge[0]], projected_points[edge[1]], (0, 255, 0), 2)
 
-            # Project the 3D bounding box to the 2D image plane
-            projected_points = []
-            for point in cube.points:
-                projected_point = self.project_point(point, self.camera_matrix, self.rotation_vector, self.translation_vector)
-                projected_points.append(projected_point)
-
-            # Draw the 3D bounding box
-            for edge in cube.edges:
-                cv2.line(image, projected_points[edge[0]], projected_points[edge[1]], (0, 255, 0), 2)
+# # Create an Open3D LineSet object
+# line_set = o3d.geometry.LineSet()
+# line_set.points = o3d.utility.Vector3dVector(points)
+# line_set.lines = o3d.utility.Vector2iVector(lines)
+# line_set.colors = o3d.utility.Vector3dVector([[0, 1, 0] for _ in range(len(lines))])  # Green color

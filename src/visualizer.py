@@ -277,7 +277,25 @@
 
 #     key = cv2.waitKey(1) & 0xFF
 
+##########################################
 
+# import copy
+
+# # Open3D also supports a general transformation 
+# # defined by a 4×4 homogeneous transformation matrix using the method transform.
+# mesh = o3d.geometry.TriangleMesh.create_coordinate_frame()
+# T = np.eye(4)
+# #T[:3, :3] = mesh.get_rotation_matrix_from_xyz((0, np.pi / 3, np.pi / 2))
+# T[0, 0] = 4
+# T[1, 1] = 2
+# T[2, 2] = 2
+# T[0, 3] = 2
+# T[1, 3] = 2
+# print(T)
+# mesh_t = copy.deepcopy(mesh).transform(T)
+# o3d.visualization.draw_geometries([mesh, mesh_t])
+
+##########################################
 
 
 import numpy as np
@@ -308,37 +326,39 @@ def box_center_to_corner(box):
     eight_points = np.tile(translation, (8, 1))
 
     # Translate the rotated bounding box by the
-    # original center position to obtain the final box
-    corner_box = np.dot(
-        rotation_matrix, bounding_box) + eight_points.transpose()
+    # original center position to obtain the final box    
+    corner_box = np.dot(rotation_matrix, bounding_box)# + eight_points.transpose()
 
     return corner_box.transpose()
-
-x = 0
-y = 0
-z = 0
-h = 1
-w = 1
-l = 1
-r = 0
-corner_box = box_center_to_corner([x,y,z,h,w,l,r])
-
-# Our lines span from points 0 to 1, 1 to 2, 2 to 3, etc...
-lines = [[0, 1], [1, 2], [2, 3], [0, 3],
-         [4, 5], [5, 6], [6, 7], [4, 7],
-         [0, 4], [1, 5], [2, 6], [3, 7]]
-
-# Use the same color for all lines
-colors = [[1, 0, 0] for _ in range(len(lines))]
-
-line_set = o3d.geometry.LineSet()
-line_set.points = o3d.utility.Vector3dVector(corner_box)
-line_set.lines = o3d.utility.Vector2iVector(lines)
-line_set.colors = o3d.utility.Vector3dVector(colors)
 
 # Create a visualization object and window
 vis = o3d.visualization.Visualizer()
 vis.create_window()
+
+
+
+# Move cube slightly to show that the rendering is real-time
+x = -103.5
+y = -100.5
+z = -110.5
+h = 2
+w = 1
+l = 0.5
+r = 0
+points = box_center_to_corner([x,y,z,h,w,l,r])
+
+# Our lines span from points 0 to 1, 1 to 2, 2 to 3, etc...
+lines = [[0, 1], [1, 2], [2, 3], [0, 3],
+        [4, 5], [5, 6], [6, 7], [4, 7],
+        [0, 4], [1, 5], [2, 6], [3, 7]]
+
+color = [0, 0.5, 0.5]
+colors = [color for _ in range(len(lines))]
+
+line_set = o3d.geometry.LineSet()
+line_set.points = o3d.utility.Vector3dVector(points)
+line_set.lines = o3d.utility.Vector2iVector(lines)
+line_set.colors = o3d.utility.Vector3dVector(colors)
 
 # Display the bounding boxes:
 vis.add_geometry(line_set)
@@ -346,12 +366,17 @@ vis.add_geometry(line_set)
 i = 0
 multiplier = 1
 while True:
+
     i += 1
-    if i % 100 == 0:
+    if i % 1000 == 0:
         multiplier *= -1
-    #mesh.translate([0.001 * multiplier, 0, 0])
-    #mesh.scale(0.999, center=mesh.get_center())
-    # Move cube slightly to show that the rendering is real-time
+    
+    #line_set.translate([0.001 * multiplier, 0, 0])
+    #line_set.scale(0.999, center=line_set.get_center())
+
+    line_set.points = o3d.utility.Vector3dVector(
+    np.asarray(line_set.points) * np.array([1.001, 1., 1.]) )
+
     vis.update_geometry(line_set)
     vis.poll_events()
     vis.update_renderer()

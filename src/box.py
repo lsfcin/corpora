@@ -1,7 +1,8 @@
 import transform
 
 class Box:
-    def __init__(self, dimensions, transform, color):
+    def __init__(self, dimensions, translation, scale, color):
         self.dimensions = dimensions
-        self.transform = transform
+        self.translation = translation
+        self.scale = scale
         self.color = color

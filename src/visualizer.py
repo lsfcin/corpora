@@ -371,13 +371,13 @@ geometry = geo.Geometry()
 top_left_front = np.array([0, 0, 0])
 bottom_right_back = np.array([1, 1, 1])
 label = "person"
-#box = geometry.create_bounding_box(top_left_front, bottom_right_back, label)
+box = geometry.create_bounding_box(top_left_front, bottom_right_back, label)
 
 line_set = create_line_set([0, 1, 0])
 
 # Display the bounding boxes:
-#vis.add_geometry(box.line_set)
-vis.add_geometry(line_set)
+vis.add_geometry(box.line_set)
+#vis.add_geometry(line_set)
 
 i = 0
 multiplier = 1
@@ -390,9 +390,9 @@ while True:
     #line_set.translate([0.001 * multiplier, 0, 0])
     #line_set.scale(0.999, center=line_set.get_center())
 
-    line_set.points = o3d.utility.Vector3dVector(
-    np.asarray(line_set.points) * np.array([1.001, 1., 1.]) )
+    box.line_set.points = o3d.utility.Vector3dVector(
+    np.asarray(box.line_set.points) * np.array([1.001, 1., 1.]) )
 
-    vis.update_geometry(line_set)
+    vis.update_geometry(box.line_set)
     vis.poll_events()
     vis.update_renderer()

@@ -314,8 +314,8 @@ vis = o3d.visualization.Visualizer()
 vis.create_window()
 
 geometry = geo.Geometry()
-top_left_front = np.array([0, 0, 0])
-bottom_right_back = np.array([1, 1, 1])
+top_left_front = np.array([0.5, 0.5, 0.5])
+bottom_right_back = np.array([-0.5, -0.5, -0.5])
 label = "person"
 box = geometry.create_bounding_box(top_left_front, bottom_right_back, label)
 
@@ -330,11 +330,10 @@ while True:
     if i % 1000 == 0:
         multiplier *= -1
     
-    #line_set.translate([0.001 * multiplier, 0, 0])
-    #line_set.scale(0.999, center=line_set.get_center())
-
-    box.line_set.points = o3d.utility.Vector3dVector(
-        np.asarray(box.line_set.points) * np.array([1.001, 1., 1.]) )
+    box.update(np.array([1, 0, 0]), np.array([0.5, 1.5, 1.0001]))
+    #box.line_set.translate([0, 0, 0.001 * multiplier])
+    #box.line_set.points = o3d.utility.Vector3dVector(
+        #np.asarray(box.line_set.points) * np.array([1.001, 1., 1.]) )
 
     vis.update_geometry(box.line_set)
     vis.poll_events()

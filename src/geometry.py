@@ -1,85 +1,63 @@
 import cv2
+import box
 import numpy as np
-import hashlib
-
-# Define a list of 16 different colors
-colors_set = [
-    [255, 0, 0], 
-    [0, 255, 0], 
-    [0, 0, 255],
-    [255, 255, 0], 
-    [0, 255, 255], 
-    [255, 0, 255],
-    [128, 0, 0], 
-    [0, 128, 0], 
-    [0, 0, 128],
-    [128, 128, 0], 
-    [0, 128, 128], 
-    [128, 0, 128],
-    [64, 0, 0], 
-    [0, 64, 0], 
-    [0, 0, 64],
-    [64, 64, 0]
-]
 
 class Geometry:
     def __init__(self):
         self.boxes = []
         pass
 
-    def create_box(self, corners, color):
-        top_left_front = corners['bounding_box'][0]
-        bottom_right_back = corners['bounding_box'][1]
+    def create_bounding_box(self, top_left_front, bottom_right_back, label):
+        scale = np.abs(top_left_front - bottom_right_back)
+        center = (top_left_front + bottom_right_back) / 2
+        bounding_box = box.Box(center, scale, label)
+        return bounding_box
 
         # Create 8 points of the bounding box
-        points = [
-            top_left_front,
-            [bottom_right_back[0], top_left_front[1], top_left_front[2]],
-            [top_left_front[0], bottom_right_back[1], top_left_front[2]],
-            [top_left_front[0], top_left_front[1], bottom_right_back[2]],
-            [bottom_right_back[0], bottom_right_back[1], top_left_front[2]],
-            [bottom_right_back[0], top_left_front[1], bottom_right_back[2]],
-            [top_left_front[0], bottom_right_back[1], bottom_right_back[2]],
-            bottom_right_back
-        ]
+        # points = [
+        #     top_left_front,
+        #     [bottom_right_back[0], top_left_front[1], top_left_front[2]],
+        #     [top_left_front[0], bottom_right_back[1], top_left_front[2]],
+        #     [top_left_front[0], top_left_front[1], bottom_right_back[2]],
+        #     [bottom_right_back[0], bottom_right_back[1], top_left_front[2]],
+        #     [bottom_right_back[0], top_left_front[1], bottom_right_back[2]],
+        #     [top_left_front[0], bottom_right_back[1], bottom_right_back[2]],
+        #     bottom_right_back
+        # ]
 
-        # Create lines connecting the points
-        lines = [
-            [0, 1], 
-            [0, 2], 
-            [0, 3],
-            [1, 4], 
-            [1, 5],
-            [2, 4], 
-            [2, 6],
-            [3, 5], 
-            [3, 6],
-            [4, 7],
-            [5, 7],
-            [6, 7]
-        ]
+        # # Create lines connecting the points
+        # lines = [
+        #     [0, 1], 
+        #     [0, 2], 
+        #     [0, 3],
+        #     [1, 4], 
+        #     [1, 5],
+        #     [2, 4], 
+        #     [2, 6],
+        #     [3, 5], 
+        #     [3, 6],
+        #     [4, 7],
+        #     [5, 7],
+        #     [6, 7]
+        # ]
 
-        colors = [color for _ in range(len(lines))]
+        # colors = [color for _ in range(len(lines))]
 
-        return [points, lines, colors]
+        #return [points, lines, colors]
     
-    def get_color(self, label):
-        hash_object = hashlib.sha256(label.encode())
-        color_id = int(hash_object.hexdigest(), 16) % 16
-        color = colors_set[color_id]
-        return color
+    
 
     # receive a depth map and a segmentation mask and 
     # return the 3D boundung boxes and orientations of the objects
     def process(self, depth_map, contours, labels):
-        # List to store the 3D bounding boxes and orientations
 
+        # Clear the list of 3D bounding boxes and orientations
         self.boxes.clear()
 
+        # List to store the 3D bounding boxes and orientations
         for contour, label in zip(contours, labels):
 
-            # Find the maximum and the average depth values of the object in the current contour
-            
+            # Find the maximum and the average depth values of the object in the current contour        
             # Create a mask for the current contour
             contour_mask = np.zeros_like(depth_map, dtype=np.uint8)
             cv2.drawContours(contour_mask, [contour], -1, 255, thickness=cv2.FILLED)
@@ -90,8 +68,6 @@ class Geometry:
             # Calculate the minimum, maximum, and average depth values
             max_depth = np.max(depth_values)
             avg_depth = np.mean(depth_values)
-
-            print(f"{label} -> max depth: {max_depth}, avg depth: {avg_depth}")
 
             # Calculate the 2D bounding box
             x, y, w, h = cv2.boundingRect(contour)
@@ -104,21 +80,9 @@ class Geometry:
             top_left_front = np.array([x, y, depth_front])
             bottom_right_back = np.array([x + w, y + h, depth_back])
 
-            # Calculate the center of the bounding box
-            center = (top_left_front + bottom_right_back) / 2
-
-            # # Calculate the orientation of the object (simplified example)
-            # orientation = np.arctan2(tr_3d[1] - tl_3d[1], tr_3d[0] - tl_3d[0])
-
             # Store the 3D bounding box and orientation
-            corners = [top_left_front, bottom_right_back]
-            color = self.get_color(label)
-            box = self.create_box(corners, color)
-            self.boxes.append({
-                'bounding_box': box,
-                'center': center,
-                'label': label
-            })
+            box = self.create_bounding_box(top_left_front, bottom_right_back, label)
+            self.boxes.append(box)
 
     def project_point(self, point, camera_matrix, rotation_vector, translation_vector):
         # Project the 3D point to the 2D image plane

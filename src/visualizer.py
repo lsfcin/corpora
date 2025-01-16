@@ -1,3 +1,10 @@
+# references
+# https://stackoverflow.com/questions/66608152/scaling-along-a-single-axis-in-open3d
+# https://www.open3d.org/html/python_api/open3d.visualization.html
+# https://www.open3d.org/html/tutorial/Basic/index.html
+# https://www.open3d.org/html/tutorial/Advanced/index.html
+# https://github.com/mxagar/open3d_guide/blob/main/notebooks/04_Transformations.ipynb
+
 # import sys
 # import os
 
@@ -300,7 +307,32 @@
 
 import numpy as np
 import open3d as o3d
+import geometry as geo
 
+def create_line_set(color):
+    # Move cube slightly to show that the rendering is real-time
+    x = -103.5
+    y = -100.5
+    z = -110.5
+    h = 2
+    w = 1
+    l = 0.5
+    r = 0
+    points = box_center_to_corner([x,y,z,h,w,l,r])
+
+    # Our lines span from points 0 to 1, 1 to 2, 2 to 3, etc...
+    lines = [[0, 1], [1, 2], [2, 3], [0, 3],
+             [4, 5], [5, 6], [6, 7], [4, 7],
+             [0, 4], [1, 5], [2, 6], [3, 7]]
+
+    colors = [color for _ in range(len(lines))]
+
+    line_set = o3d.geometry.LineSet()
+    line_set.points = o3d.utility.Vector3dVector(points)
+    line_set.lines = o3d.utility.Vector2iVector(lines)
+    line_set.colors = o3d.utility.Vector3dVector(colors)
+
+    return line_set
 
 def box_center_to_corner(box):
     # To return
@@ -335,32 +367,16 @@ def box_center_to_corner(box):
 vis = o3d.visualization.Visualizer()
 vis.create_window()
 
+geometry = geo.Geometry()
+top_left_front = np.array([0, 0, 0])
+bottom_right_back = np.array([1, 1, 1])
+label = "person"
+#box = geometry.create_bounding_box(top_left_front, bottom_right_back, label)
 
-
-# Move cube slightly to show that the rendering is real-time
-x = -103.5
-y = -100.5
-z = -110.5
-h = 2
-w = 1
-l = 0.5
-r = 0
-points = box_center_to_corner([x,y,z,h,w,l,r])
-
-# Our lines span from points 0 to 1, 1 to 2, 2 to 3, etc...
-lines = [[0, 1], [1, 2], [2, 3], [0, 3],
-        [4, 5], [5, 6], [6, 7], [4, 7],
-        [0, 4], [1, 5], [2, 6], [3, 7]]
-
-color = [0, 0.5, 0.5]
-colors = [color for _ in range(len(lines))]
-
-line_set = o3d.geometry.LineSet()
-line_set.points = o3d.utility.Vector3dVector(points)
-line_set.lines = o3d.utility.Vector2iVector(lines)
-line_set.colors = o3d.utility.Vector3dVector(colors)
+line_set = create_line_set([0, 1, 0])
 
 # Display the bounding boxes:
+#vis.add_geometry(box.line_set)
 vis.add_geometry(line_set)
 
 i = 0

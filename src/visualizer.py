@@ -309,60 +309,6 @@ import numpy as np
 import open3d as o3d
 import geometry as geo
 
-def create_line_set(color):
-    # Move cube slightly to show that the rendering is real-time
-    x = -103.5
-    y = -100.5
-    z = -110.5
-    h = 2
-    w = 1
-    l = 0.5
-    r = 0
-    points = box_center_to_corner([x,y,z,h,w,l,r])
-
-    # Our lines span from points 0 to 1, 1 to 2, 2 to 3, etc...
-    lines = [[0, 1], [1, 2], [2, 3], [0, 3],
-             [4, 5], [5, 6], [6, 7], [4, 7],
-             [0, 4], [1, 5], [2, 6], [3, 7]]
-
-    colors = [color for _ in range(len(lines))]
-
-    line_set = o3d.geometry.LineSet()
-    line_set.points = o3d.utility.Vector3dVector(points)
-    line_set.lines = o3d.utility.Vector2iVector(lines)
-    line_set.colors = o3d.utility.Vector3dVector(colors)
-
-    return line_set
-
-def box_center_to_corner(box):
-    # To return
-    corner_boxes = np.zeros((8, 3))
-
-    translation = box[0:3]
-    h, w, l = box[3], box[4], box[5]
-    rotation = box[6]
-
-    # Create a bounding box outline
-    bounding_box = np.array([
-        [-l/2, -l/2, l/2, l/2, -l/2, -l/2, l/2, l/2],
-        [w/2, -w/2, -w/2, w/2, w/2, -w/2, -w/2, w/2],
-        [-h/2, -h/2, -h/2, -h/2, h/2, h/2, h/2, h/2]])
-
-    # Standard 3x3 rotation matrix around the Z axis
-    rotation_matrix = np.array([
-        [np.cos(rotation), -np.sin(rotation), 0.0],
-        [np.sin(rotation), np.cos(rotation), 0.0],
-        [0.0, 0.0, 1.0]])
-
-    # Repeat the [x, y, z] eight times
-    eight_points = np.tile(translation, (8, 1))
-
-    # Translate the rotated bounding box by the
-    # original center position to obtain the final box    
-    corner_box = np.dot(rotation_matrix, bounding_box)# + eight_points.transpose()
-
-    return corner_box.transpose()
-
 # Create a visualization object and window
 vis = o3d.visualization.Visualizer()
 vis.create_window()
@@ -373,11 +319,8 @@ bottom_right_back = np.array([1, 1, 1])
 label = "person"
 box = geometry.create_bounding_box(top_left_front, bottom_right_back, label)
 
-line_set = create_line_set([0, 1, 0])
-
 # Display the bounding boxes:
 vis.add_geometry(box.line_set)
-#vis.add_geometry(line_set)
 
 i = 0
 multiplier = 1
@@ -391,7 +334,7 @@ while True:
     #line_set.scale(0.999, center=line_set.get_center())
 
     box.line_set.points = o3d.utility.Vector3dVector(
-    np.asarray(box.line_set.points) * np.array([1.001, 1., 1.]) )
+        np.asarray(box.line_set.points) * np.array([1.001, 1., 1.]) )
 
     vis.update_geometry(box.line_set)
     vis.poll_events()

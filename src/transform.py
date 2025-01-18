@@ -1,6 +1,11 @@
 import cv2
 import numpy as np
 
+class Pose6DOF:
+    def __init__(self, position, direction):
+        self.position = position
+        self.direction = direction
+        
 class Transform:
     def __init__(self, position, orientation):
         

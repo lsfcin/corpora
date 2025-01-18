@@ -23,7 +23,8 @@ colors_set = [
 ]
 
 class Box:
-    def __init__(self, center, dimensions, label):
+    def __init__(self, center, dimensions, label, frame_id):
+        self.frame_appearances = list()
 
         self.center = center
         self.previous_center = np.array([0, 0, 0])
@@ -56,7 +57,7 @@ class Box:
         self.line_set.lines = o3d.utility.Vector2iVector(lines)
         self.line_set.colors = o3d.utility.Vector3dVector(colors)
 
-        self.update(center, dimensions)
+        self.update(center, dimensions, frame_id)
 
     def get_color(self, label):
         hash_object = hashlib.sha256(label.encode())
@@ -64,7 +65,11 @@ class Box:
         color = colors_set[color_id]
         return color
     
-    def update(self, center, dimensions):
+    def update(self, box, frame_id):
+        self.update(box.center, box.dimensions, frame_id)
+        
+    def update(self, center, dimensions, frame_id):
+        self.frame_appearances.append(frame_id)
         
         self.previous_center = self.center
         self.center = center

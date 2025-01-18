@@ -1,55 +1,27 @@
 import cv2
-import box
 import numpy as np
+import open3d as o3d
+import src.box as box
 
 class Geometry:
     def __init__(self):
         self.boxes = []
-        pass
+        self.frame_id = 0
+        
+        # Create a visualization object and window
+        self.vis = o3d.visualization.Visualizer()
+        self.vis.create_window()
 
-    def create_bounding_box(self, top_left_front, bottom_right_back, label):
+    def create_box(self, top_left_front, bottom_right_back, label):
         scale = np.abs(top_left_front - bottom_right_back)
         center = (top_left_front + bottom_right_back) / 2
         bounding_box = box.Box(center, scale, label)
         return bounding_box
 
-        # Create 8 points of the bounding box
-        # points = [
-        #     top_left_front,
-        #     [bottom_right_back[0], top_left_front[1], top_left_front[2]],
-        #     [top_left_front[0], bottom_right_back[1], top_left_front[2]],
-        #     [top_left_front[0], top_left_front[1], bottom_right_back[2]],
-        #     [bottom_right_back[0], bottom_right_back[1], top_left_front[2]],
-        #     [bottom_right_back[0], top_left_front[1], bottom_right_back[2]],
-        #     [top_left_front[0], bottom_right_back[1], bottom_right_back[2]],
-        #     bottom_right_back
-        # ]
-
-        # # Create lines connecting the points
-        # lines = [
-        #     [0, 1], 
-        #     [0, 2], 
-        #     [0, 3],
-        #     [1, 4], 
-        #     [1, 5],
-        #     [2, 4], 
-        #     [2, 6],
-        #     [3, 5], 
-        #     [3, 6],
-        #     [4, 7],
-        #     [5, 7],
-        #     [6, 7]
-        # ]
-
-        # colors = [color for _ in range(len(lines))]
-
-        #return [points, lines, colors]
-    
-    
-
-    # receive a depth map and a segmentation mask and 
-    # return the 3D boundung boxes and orientations of the objects
+    # Receive a depth map and a segmentation mask and 
+    # Updates the 3D boundung boxes and orientations of the objects
     def process(self, depth_map, contours, labels):
+        self.frame_id += 1
 
         # Clear the list of 3D bounding boxes and orientations
         self.boxes.clear()
@@ -81,14 +53,49 @@ class Geometry:
             bottom_right_back = np.array([x + w, y + h, depth_back])
 
             # Store the 3D bounding box and orientation
-            box = self.create_bounding_box(top_left_front, bottom_right_back, label)
-            self.boxes.append(box)
+            box = self.create_box(top_left_front, bottom_right_back, label, self.frame_id)
+            self.track(box)
 
-    def project_point(self, point, camera_matrix, rotation_vector, translation_vector):
-        # Project the 3D point to the 2D image plane
-        point = point.reshape(1, 3)
-        image_points, _ = cv2.projectPoints(point, rotation_vector, translation_vector, camera_matrix, None)
-        return image_points[0][0]
+    def track(self, box):
+        found = False
+
+        dimensions_threshold = 0.3
+        centers_threshold = 0.3
+
+        # Attempt to find (Re-ID) the box in the list of boxes
+        # First filter the boxes that have the same label
+        for i, b in enumerate(self.boxes):
+            if b.label == box.label:
+                # Then check if the dimensions are similar
+                similar_dimensions = np.linalg.norm(b.dimensions - box.dimensions) < dimensions_threshold
+
+                # And check if the distance between the centers falls within a threshold based on the dimensions
+                nearby_centers = np.linalg.norm(b.center - box.center) < np.linalg.norm(box.dimensions) * centers_threshold
+                
+                if similar_dimensions and nearby_centers:
+                    found = True
+                    id = i
+                    break
+
+        if found:
+            self.boxes[id].update(box, self.frame_id)
+        else:
+            self.vis.add_geometry(box.line_set)
+            self.boxes.append(box)
+    
+    def show(self):
+        
+        for box in self.boxes:
+            self.vis.update_geometry(box.line_set)
+        
+        self.vis.poll_events()
+        self.vis.update_renderer()
+
+    # def project_point(self, point, camera_matrix, rotation_vector, translation_vector):
+    #     # Project the 3D point to the 2D image plane
+    #     point = point.reshape(1, 3)
+    #     image_points, _ = cv2.projectPoints(point, rotation_vector, translation_vector, camera_matrix, None)
+    #     return image_points[0][0]
 
     # def show(self):
 

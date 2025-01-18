@@ -307,7 +307,7 @@
 
 import numpy as np
 import open3d as o3d
-import geometry as geo
+import src.geometry as geo
 
 # Create a visualization object and window
 vis = o3d.visualization.Visualizer()
@@ -317,7 +317,7 @@ geometry = geo.Geometry()
 top_left_front = np.array([0.5, 0.5, 0.5])
 bottom_right_back = np.array([-0.5, -0.5, -0.5])
 label = "person"
-box = geometry.create_bounding_box(top_left_front, bottom_right_back, label)
+box = geometry.create_box(top_left_front, bottom_right_back, label)
 
 # Display the bounding boxes:
 vis.add_geometry(box.line_set)
@@ -331,9 +331,6 @@ while True:
         multiplier *= -1
     
     box.update(np.array([1, 0, 0]), np.array([0.5, 1.5, 1.0001]))
-    #box.line_set.translate([0, 0, 0.001 * multiplier])
-    #box.line_set.points = o3d.utility.Vector3dVector(
-        #np.asarray(box.line_set.points) * np.array([1.001, 1., 1.]) )
 
     vis.update_geometry(box.line_set)
     vis.poll_events()

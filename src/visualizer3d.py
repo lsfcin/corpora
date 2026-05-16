@@ -1,3 +1,4 @@
+# Visualizer3D: OpenCV overlay renderer for 3D bounding cube projections
 import cv2
 import numpy as np
 

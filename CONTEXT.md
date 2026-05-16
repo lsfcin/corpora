@@ -1,4 +1,5 @@
 # Corpora
+> Real-time 3D computer vision research pipeline — depth, pose, segmentation from live webcam
 
 Real-time 3D computer vision research pipeline. Combines monocular depth estimation, human pose estimation, and segmentation from a live webcam feed to produce 3D spatial understanding (bounding boxes, 6-DoF pose, point clouds).
 
@@ -37,3 +38,17 @@ Webcam → Input → [DepthEstimator | PoseEstimator | Segmenter] → Geometry �
 - `depth_anything_v2/` and `metric_depth/` are upstream research code — patch by subclassing or wrapping, not by editing directly.
 - Model checkpoints are not committed; download separately per `requirements.txt` notes.
 - `src/visualizer3d.py` is disabled — re-enable cautiously, it has heavy 3D rendering deps.
+
+<!-- routing:start -->
+## Routing
+
+| Subdirectory | Description |
+|--------------|-------------|
+| [`depth_anything_v2/`](depth_anything_v2/CONTEXT.md) | — |
+| [`metric_depth/`](metric_depth/CONTEXT.md) | — |
+| [`src/`](src/CONTEXT.md) | — |
+
+| File | Interface | API | Description |
+|------|-----------|-----|-------------|
+| [`main.py`](main.py) | [`main.pyi`](main.pyi) | — | Main pipeline: orchestrates depth estimation, segmentation, HPE, geometry, and input modules |
+<!-- routing:end -->

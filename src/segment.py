@@ -1,3 +1,4 @@
+# Segmenter: YOLO11-seg instance segmentation wrapper producing masks and bounding boxes
 import cv2
 import numpy as np
 from ultralytics import YOLO

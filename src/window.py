@@ -1,3 +1,4 @@
+# Window: tracks the active OS window to associate detections with the foreground application
 import pygetwindow as gw
 
 class Window:

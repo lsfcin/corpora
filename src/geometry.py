@@ -1,3 +1,4 @@
+# Geometry: lifts 2D detections to 3D boxes using depth maps and camera intrinsics
 import cv2
 import numpy as np
 

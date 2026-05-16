@@ -1,3 +1,4 @@
+# Virtual KITTI 2 dataset loader: reads synthetic depth and RGB for metric depth fine-tuning
 import cv2
 import torch
 from torch.utils.data import Dataset

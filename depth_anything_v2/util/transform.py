@@ -1,3 +1,4 @@
+# Image pre-processing transforms: resize, normalize, and prepare for DepthAnythingV2
 import numpy as np
 import cv2
 

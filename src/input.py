@@ -1,3 +1,4 @@
+# Input: threaded mouse and keyboard listener for real-time interaction
 
 import threading
 from pynput import mouse, keyboard

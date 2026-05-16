@@ -1,3 +1,4 @@
+# Main pipeline: orchestrates depth estimation, segmentation, HPE, geometry, and input modules
 import src.hpe as hpe
 import src.depth as depth
 import src.segment as segment

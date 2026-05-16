@@ -1,3 +1,4 @@
+# Box3D: 3D bounding box combining physical dimensions and 6-DOF pose
 import src.pose6dof as pose6dof
 
 class Box3D:

@@ -1,3 +1,4 @@
+# KITTI dataset loader: reads stereo depth and RGB for metric depth fine-tuning
 import cv2
 import torch
 from torch.utils.data import Dataset

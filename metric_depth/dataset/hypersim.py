@@ -1,3 +1,4 @@
+# HyperSim dataset loader: reads HDF5 depth and RGB for metric depth fine-tuning
 import cv2
 import h5py
 import numpy as np

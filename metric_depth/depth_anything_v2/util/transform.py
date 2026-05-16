@@ -1,3 +1,4 @@
+# Image pre-processing transforms (metric variant): resize, normalize, and prepare for net
 import numpy as np
 import cv2
 

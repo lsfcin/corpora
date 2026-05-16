@@ -1,3 +1,4 @@
+# Distributed training helper: sets up PyTorch DDP and queries GPU count via CUDA
 import os
 import subprocess
 

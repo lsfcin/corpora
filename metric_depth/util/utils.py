@@ -1,3 +1,4 @@
+# Training utilities: logging setup, seed fixing, distributed gather, and checkpoint helpers
 import os
 import re
 import numpy as np

@@ -1,3 +1,4 @@
+# DepthEstimator: wraps DepthAnythingV2 to produce per-frame depth maps from RGB
 import cv2
 import torch
 import matplotlib

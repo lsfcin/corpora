@@ -1,3 +1,4 @@
+# SiLogLoss: scale-invariant logarithmic loss for metric depth regression
 import torch
 from torch import nn
 

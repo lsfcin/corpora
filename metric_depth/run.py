@@ -1,3 +1,4 @@
+# Inference script: runs DepthAnythingV2 metric depth on images, video, or live camera
 import argparse
 import cv2
 import glob

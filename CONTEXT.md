@@ -1,5 +1,5 @@
 # Corpora
-> Real-time 3D computer vision research pipeline — depth, pose, segmentation from live webcam
+> Real-time 3D computer vision pipeline — depth, pose, segmentation from webcam
 
 Real-time 3D computer vision research pipeline. Combines monocular depth estimation, human pose estimation, and segmentation from a live webcam feed to produce 3D spatial understanding (bounding boxes, 6-DoF pose, point clouds).
 

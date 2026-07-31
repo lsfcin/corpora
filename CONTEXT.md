@@ -49,7 +49,7 @@ Webcam → Input → [DepthEstimator | PoseEstimator | Segmenter] → Geometry �
 | [`metric_depth/`](metric_depth/CONTEXT.md) | — |
 | [`src/`](src/CONTEXT.md) | — |
 
-| File | Interface | API | Description |
-|------|-----------|-----|-------------|
-| [`main.py`](main.py) | [`main.pyi`](main.pyi) | — | Main pipeline: orchestrates depth estimation, segmentation, HPE, geometry, and input modules |
+| File | Interface | Description |
+|------|-----------|-------------|
+| [`main.py`](main.py) | [`main.pyi`](main.pyi) | Main pipeline: orchestrates depth estimation, segmentation, HPE, geometry, and input modules |
 <!-- routing:end -->
